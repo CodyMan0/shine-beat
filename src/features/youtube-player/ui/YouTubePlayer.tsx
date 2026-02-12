@@ -85,9 +85,19 @@ export function YouTubePlayer({ onStateChange, onVideoLoaded, youtubeRef }: YouT
               />
             </div>
 
-            <p className="text-[11px] text-white/15 font-mono">
-              URL 입력 후 Enter 또는 붙여넣기로 자동 로드
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-[11px] text-white/15 font-mono">
+                URL 붙여넣기로 자동 로드
+              </p>
+              <a
+                href="https://www.youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-accent/50 hover:text-accent font-mono transition-colors"
+              >
+                YouTube 열기 →
+              </a>
+            </div>
           </div>
         )}
       </div>
