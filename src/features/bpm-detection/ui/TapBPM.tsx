@@ -69,7 +69,7 @@ export function TapBPM({ onBpmDetected }: TapBPMProps) {
       <div className="space-y-4">
         <button
           onClick={handleTap}
-          className="w-full py-12 bg-surface border-2 border-surface-border text-text-primary rounded-xl hover:border-accent active:bg-accent active:text-black active:scale-95 transition-all text-2xl font-semibold"
+          className="w-full py-8 sm:py-12 bg-surface border-2 border-surface-border text-text-primary rounded-xl hover:border-accent active:bg-accent active:text-black active:scale-95 transition-all text-2xl font-semibold"
         >
           Tap BPM
         </button>
@@ -77,7 +77,7 @@ export function TapBPM({ onBpmDetected }: TapBPMProps) {
         <div className="text-center space-y-2">
           {detectedBpm !== null ? (
             <>
-              <div className="text-3xl font-mono font-bold text-accent">{detectedBpm}</div>
+              <div className="text-2xl sm:text-3xl font-mono font-bold text-accent">{detectedBpm}</div>
               <div className="text-xs text-text-muted">
                 감지된 BPM ({tapCount} taps)
               </div>

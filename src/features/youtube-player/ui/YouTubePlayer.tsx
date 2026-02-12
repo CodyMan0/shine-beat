@@ -51,7 +51,7 @@ export function YouTubePlayer({ onStateChange, onVideoLoaded, youtubeRef }: YouT
           <button
             onClick={handleLoadVideo}
             disabled={!url.trim() || !isReady}
-            className="px-6 py-2 bg-accent text-black font-semibold rounded-lg hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="shrink-0 px-4 sm:px-6 py-2 bg-accent text-black font-semibold rounded-lg hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             로드
           </button>

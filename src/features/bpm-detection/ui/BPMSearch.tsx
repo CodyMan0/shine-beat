@@ -96,7 +96,7 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
 
       {/* Manual BPM Input (shown when Deezer fails) */}
       {!isSearching && error && searchTitle && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleGoogleSearch}
             className="shrink-0 text-xs px-3 py-2 bg-surface border border-surface-border text-text-primary rounded-lg hover:bg-surface-hover transition-colors"

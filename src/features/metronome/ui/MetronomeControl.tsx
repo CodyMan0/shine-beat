@@ -41,13 +41,13 @@ export function MetronomeControl({ metronomeRef }: MetronomeControlProps) {
     <div className="bg-surface rounded-xl border border-surface-border p-5">
       <div className="space-y-6">
         {/* Time Signature & Subdivision Selector */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-2 sm:gap-4">
           <div className="flex items-center gap-1.5">
             {TIME_SIGNATURES.map((ts) => (
               <button
                 key={ts}
                 onClick={() => setTimeSignature(ts)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-2 sm:px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                   timeSignature === ts
                     ? 'bg-accent text-black'
                     : 'bg-surface border border-surface-border text-text-secondary hover:bg-surface-hover'
@@ -91,7 +91,7 @@ export function MetronomeControl({ metronomeRef }: MetronomeControlProps) {
               onChange={(e) => handleBpmChange(Number(e.target.value))}
               min="30"
               max="300"
-              className="w-32 font-mono font-extrabold text-6xl text-accent text-center bg-transparent border-none focus:outline-none appearance-none"
+              className="w-32 font-mono font-extrabold text-5xl sm:text-6xl text-accent text-center bg-transparent border-none focus:outline-none appearance-none"
             />
             <div className="text-xs text-text-muted font-mono mt-1">BPM</div>
           </div>

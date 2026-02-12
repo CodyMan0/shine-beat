@@ -39,82 +39,63 @@ export function FeedbackForm() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-accent rounded-full shadow-lg hover:brightness-110 hover:scale-105 transition-all flex items-center justify-center group"
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-all flex items-center justify-center ${
+          isOpen
+            ? 'bg-[#3a3a40] text-white/70'
+            : 'bg-accent text-black hover:brightness-110'
+        }`}
         aria-label="문의하기"
       >
-        <svg
-          className="w-6 h-6 text-black"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-          />
-        </svg>
+        {isOpen ? (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        )}
       </button>
 
       {/* Modal */}
       {isOpen && (
         <div
-          className="fixed bottom-24 right-6 z-50 w-80 transition-all duration-200 animate-in fade-in slide-in-from-bottom-2"
-          style={{
-            animation: 'fadeIn 0.2s ease-out',
-          }}
+          className="fixed bottom-24 right-6 z-50 w-80"
+          style={{ animation: 'fadeIn 0.2s ease-out' }}
         >
-          <div className="bg-[#2a2a2f] rounded-xl border border-[#4a4a50] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-            {/* Header with Close Button */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-text-primary tracking-wide">
-                문의하기
-              </h2>
-              <button
-                onClick={handleClose}
-                className="text-text-muted hover:text-text-primary transition-colors"
-                aria-label="닫기"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+          <div className="bg-[#1a1a1e] rounded-2xl border border-white/10 p-6 shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+            {/* Header */}
+            <h2 className="text-base font-bold text-white mb-5">
+              문의하기
+            </h2>
 
             {/* Success State */}
             {isSubmitted ? (
-              <div className="text-center space-y-3 py-4">
-                <div className="text-accent text-2xl">✓</div>
-                <p className="text-text-primary font-medium">문의가 전송되었습니다</p>
-                <p className="text-text-muted text-sm">빠르게 확인하겠습니다</p>
+              <div className="text-center space-y-3 py-6">
+                <div className="w-12 h-12 mx-auto rounded-full bg-accent/15 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white font-medium">전송 완료</p>
+                <p className="text-white/40 text-sm">빠르게 확인하겠습니다</p>
               </div>
             ) : (
               /* Form */
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form onSubmit={handleSubmit} className="space-y-3.5">
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="이름 (선택)"
-                  className="w-full px-3 py-2 bg-surface border border-surface-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:border-accent focus:outline-none transition-colors"
+                  className="w-full px-3.5 py-2.5 bg-white/[0.06] border border-white/[0.08] rounded-lg text-white placeholder:text-white/25 text-sm focus:border-accent/50 focus:bg-white/[0.08] focus:outline-none transition-all"
                 />
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="문의 내용을 입력해주세요"
-                  rows={3}
-                  className="w-full px-3 py-2 bg-surface border border-surface-border rounded-lg text-text-primary placeholder:text-text-muted text-sm focus:border-accent focus:outline-none transition-colors resize-none"
+                  rows={4}
+                  className="w-full px-3.5 py-2.5 bg-white/[0.06] border border-white/[0.08] rounded-lg text-white placeholder:text-white/25 text-sm focus:border-accent/50 focus:bg-white/[0.08] focus:outline-none transition-all resize-none"
                 />
 
                 {error && (
@@ -124,9 +105,9 @@ export function FeedbackForm() {
                 <button
                   type="submit"
                   disabled={!message.trim() || isSubmitting}
-                  className="w-full py-2.5 bg-accent text-black font-semibold rounded-lg hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm"
+                  className="w-full py-2.5 bg-accent text-black font-semibold rounded-lg hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm"
                 >
-                  {isSubmitting ? '전송 중...' : '문의 보내기'}
+                  {isSubmitting ? '전송 중...' : '보내기'}
                 </button>
               </form>
             )}
@@ -139,7 +120,7 @@ export function FeedbackForm() {
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(8px) scale(0.95);
+            transform: translateY(8px) scale(0.96);
           }
           to {
             opacity: 1;

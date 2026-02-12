@@ -91,15 +91,15 @@ function App() {
   }, [handleToggle]);
 
   return (
-    <div className="min-h-screen py-6 px-4">
+    <div className="min-h-screen py-4 px-3 sm:py-6 sm:px-4">
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Header */}
         <header className="text-center space-y-1 pb-2">
-          <h1 className="text-2xl font-mono font-bold tracking-tight text-text-primary">
-            DRUM METRONOME
+          <h1 className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-text-primary">
+            샤인비트
           </h1>
           <p className="text-xs text-text-muted tracking-widest uppercase">
-            YouTube + Metronome Sync
+            드럼 연습 메트로놈
           </p>
           {visitorCount !== null && (
             <p className="text-xs text-text-muted font-mono">

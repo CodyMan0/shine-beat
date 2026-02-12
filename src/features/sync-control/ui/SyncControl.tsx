@@ -15,7 +15,7 @@ export function SyncControl({
         {/* Main Toggle Button */}
         <button
           onClick={onToggle}
-          className={`flex-1 py-4 font-bold rounded-lg transition-all text-lg ${
+          className={`flex-1 py-3 sm:py-4 font-bold rounded-lg transition-all text-base sm:text-lg ${
             isPlaying
               ? 'bg-surface border border-accent text-accent hover:bg-surface-hover'
               : 'bg-accent text-black hover:brightness-110'
@@ -43,7 +43,7 @@ export function SyncControl({
         {isPlaying && (
           <button
             onClick={onStop}
-            className="py-4 px-5 bg-surface border border-surface-border text-text-secondary rounded-lg hover:bg-surface-hover hover:text-text-primary transition-all font-medium"
+            className="py-3 sm:py-4 px-4 sm:px-5 bg-surface border border-surface-border text-text-secondary rounded-lg hover:bg-surface-hover hover:text-text-primary transition-all font-medium"
           >
             정지
           </button>
