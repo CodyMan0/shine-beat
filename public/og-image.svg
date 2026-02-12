@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="45%" r="40%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0a0a0b"/>
+  <!-- Subtle glow -->
+  <circle cx="600" cy="280" r="300" fill="url(#glow)"/>
+  <!-- Beat bars -->
+  <rect x="380" y="200" width="16" height="80" rx="8" fill="#f59e0b" opacity="0.3"/>
+  <rect x="420" y="170" width="16" height="140" rx="8" fill="#f59e0b" opacity="0.5"/>
+  <rect x="460" y="130" width="16" height="220" rx="8" fill="#f59e0b" opacity="0.7"/>
+  <rect x="500" y="100" width="16" height="280" rx="8" fill="#f59e0b" opacity="1"/>
+  <rect x="540" y="80" width="16" height="320" rx="8" fill="#f59e0b" opacity="1"/>
+  <rect x="580" y="60" width="16" height="360" rx="8" fill="#f59e0b" opacity="1"/>
+  <rect x="620" y="80" width="16" height="320" rx="8" fill="#f59e0b" opacity="1"/>
+  <rect x="660" y="100" width="16" height="280" rx="8" fill="#f59e0b" opacity="1"/>
+  <rect x="700" y="130" width="16" height="220" rx="8" fill="#f59e0b" opacity="0.7"/>
+  <rect x="740" y="170" width="16" height="140" rx="8" fill="#f59e0b" opacity="0.5"/>
+  <rect x="780" y="200" width="16" height="80" rx="8" fill="#f59e0b" opacity="0.3"/>
+  <!-- Shine dot -->
+  <circle cx="588" cy="64" r="8" fill="white" opacity="0.9"/>
+  <!-- Title -->
+  <text x="600" y="510" text-anchor="middle" font-family="monospace" font-weight="800" font-size="64" fill="#e5e5e5">
+    <tspan fill="#f59e0b">Shine</tspan><tspan fill="#e5e5e5">Beat</tspan>
+  </text>
+  <!-- Subtitle -->
+  <text x="600" y="560" text-anchor="middle" font-family="monospace" font-size="22" fill="#737373" letter-spacing="6">
+    DRUM PRACTICE METRONOME
+  </text>
+</svg>

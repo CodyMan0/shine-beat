@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://shinebeat.app/sitemap.xml
+Sitemap: https://shine-beat.vercel.app/sitemap.xml
