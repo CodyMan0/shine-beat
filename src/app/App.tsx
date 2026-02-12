@@ -5,10 +5,14 @@ import { TapBPM } from '@/features/bpm-detection';
 import { SyncControl } from '@/features/sync-control';
 import { BPMSearch } from '@/features/bpm-detection';
 import { PlayerState } from '@/features/youtube-player';
+import { useVisitorTracking, useVisitorCount } from '@/features/analytics';
+import { FeedbackForm } from '@/features/feedback';
 
 function App() {
+  useVisitorTracking();
+  const visitorCount = useVisitorCount();
+
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMetronomeOnly, setIsMetronomeOnly] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const youtubeControlsRef = useRef<{
@@ -44,50 +48,30 @@ function App() {
   }, []);
 
   const handleYoutubeStateChange = useCallback((state: number) => {
-    // When YouTube starts playing, start the metronome
-    if (state === PlayerState.PLAYING && isPlaying) {
-      metronomeControlsRef.current?.start();
-    } else if (state === PlayerState.PAUSED) {
-      metronomeControlsRef.current?.stop();
-    } else if (state === PlayerState.ENDED) {
+    if (state === PlayerState.ENDED) {
       metronomeControlsRef.current?.stop();
       setIsPlaying(false);
     }
-  }, [isPlaying]);
+  }, []);
 
   const handleVideoLoaded = useCallback((url: string) => {
     setVideoUrl(url);
   }, []);
 
-  const handlePlayTogether = useCallback(() => {
-    setIsPlaying(true);
-    setIsMetronomeOnly(false);
-    youtubeControlsRef.current?.play();
-  }, []);
-
-  const handleMetronomeOnly = useCallback(() => {
-    setIsPlaying(true);
-    setIsMetronomeOnly(true);
-    metronomeControlsRef.current?.start();
-  }, []);
-
-  const handlePause = useCallback(() => {
-    metronomeControlsRef.current?.stop();
-    if (!isMetronomeOnly) {
-      youtubeControlsRef.current?.pause();
+  const handleToggle = useCallback(() => {
+    if (isPlaying) {
+      metronomeControlsRef.current?.stop();
+      setIsPlaying(false);
+    } else {
+      metronomeControlsRef.current?.start();
+      setIsPlaying(true);
     }
-    setIsPlaying(false);
-    setIsMetronomeOnly(false);
-  }, [isMetronomeOnly]);
+  }, [isPlaying]);
 
   const handleStop = useCallback(() => {
     metronomeControlsRef.current?.stop();
-    if (!isMetronomeOnly) {
-      youtubeControlsRef.current?.stop();
-    }
     setIsPlaying(false);
-    setIsMetronomeOnly(false);
-  }, [isMetronomeOnly]);
+  }, []);
 
   const handleBpmDetected = useCallback((bpm: number) => {
     metronomeControlsRef.current?.setBpm(bpm);
@@ -98,17 +82,13 @@ function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && e.target === document.body) {
         e.preventDefault();
-        if (isPlaying) {
-          handlePause();
-        } else {
-          handlePlayTogether();
-        }
+        handleToggle();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, handlePause, handlePlayTogether]);
+  }, [handleToggle]);
 
   return (
     <div className="min-h-screen py-6 px-4">
@@ -121,6 +101,11 @@ function App() {
           <p className="text-xs text-text-muted tracking-widest uppercase">
             YouTube + Metronome Sync
           </p>
+          {visitorCount !== null && (
+            <p className="text-xs text-text-muted font-mono">
+              <span className="text-accent font-bold">{visitorCount.toLocaleString()}</span>명이 사용했습니다
+            </p>
+          )}
         </header>
 
         {/* YouTube Player Section */}
@@ -142,10 +127,7 @@ function App() {
         {/* Sync Control Section */}
         <SyncControl
           isPlaying={isPlaying}
-          isMetronomeOnly={isMetronomeOnly}
-          onPlayTogether={handlePlayTogether}
-          onMetronomeOnly={handleMetronomeOnly}
-          onPause={handlePause}
+          onToggle={handleToggle}
           onStop={handleStop}
         />
 
@@ -157,6 +139,9 @@ function App() {
           재생/일시정지
         </div>
       </div>
+
+      {/* Floating Feedback Form */}
+      <FeedbackForm />
     </div>
   );
 }

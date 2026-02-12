@@ -1,83 +1,53 @@
 interface SyncControlProps {
   isPlaying: boolean;
-  isMetronomeOnly: boolean;
-  onPlayTogether: () => void;
-  onMetronomeOnly: () => void;
-  onPause: () => void;
+  onToggle: () => void;
   onStop: () => void;
 }
 
 export function SyncControl({
   isPlaying,
-  isMetronomeOnly,
-  onPlayTogether,
-  onMetronomeOnly,
-  onPause,
+  onToggle,
   onStop,
 }: SyncControlProps) {
   return (
     <div className="bg-surface rounded-xl border border-surface-border p-5">
-      <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-4">동기화 제어</h2>
-
-      <div className="space-y-4">
-        {/* Status Indicator */}
-        <div className="flex items-center justify-center gap-2 py-2">
-          <div
-            className={`w-3 h-3 rounded-full ${
-              isPlaying ? 'bg-accent' : 'bg-text-muted'
-            }`}
-            style={
-              isPlaying
-                ? {
-                    boxShadow: '0 0 12px rgba(251, 191, 36, 0.6)',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                  }
-                : undefined
-            }
-          />
-          <span className="text-sm font-medium text-text-primary">
-            {isPlaying
-              ? isMetronomeOnly
-                ? '메트로놈만 재생 중'
-                : '재생 중'
-              : '정지됨'}
+      <div className="flex items-center gap-3">
+        {/* Main Toggle Button */}
+        <button
+          onClick={onToggle}
+          className={`flex-1 py-4 font-bold rounded-lg transition-all text-lg ${
+            isPlaying
+              ? 'bg-surface border border-accent text-accent hover:bg-surface-hover'
+              : 'bg-accent text-black hover:brightness-110'
+          }`}
+        >
+          <span className="flex items-center justify-center gap-2">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                isPlaying ? 'bg-accent' : 'bg-black/30'
+              }`}
+              style={
+                isPlaying
+                  ? {
+                      boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)',
+                      animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                  : undefined
+              }
+            />
+            {isPlaying ? '일시정지' : '메트로놈 실행'}
           </span>
-        </div>
+        </button>
 
-        {/* Control Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={onPlayTogether}
-            disabled={isPlaying}
-            className="py-4 bg-accent text-black font-bold rounded-lg hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-lg"
-          >
-            함께 재생
-          </button>
-
-          <button
-            onClick={onMetronomeOnly}
-            disabled={isPlaying}
-            className="py-4 bg-surface border border-accent text-accent font-bold rounded-lg hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all text-lg"
-          >
-            메트로놈만
-          </button>
-
-          <button
-            onClick={onPause}
-            disabled={!isPlaying}
-            className="py-3 bg-surface border border-surface-border text-text-primary rounded-lg hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium"
-          >
-            일시정지
-          </button>
-
+        {/* Stop Button */}
+        {isPlaying && (
           <button
             onClick={onStop}
-            disabled={!isPlaying}
-            className="py-3 bg-surface border border-surface-border text-text-primary rounded-lg hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium"
+            className="py-4 px-5 bg-surface border border-surface-border text-text-secondary rounded-lg hover:bg-surface-hover hover:text-text-primary transition-all font-medium"
           >
             정지
           </button>
-        </div>
+        )}
       </div>
     </div>
   );

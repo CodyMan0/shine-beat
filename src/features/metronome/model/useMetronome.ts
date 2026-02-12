@@ -38,7 +38,7 @@ export const useMetronome = (): UseMetronomeReturn => {
   const subdivisionRef = useRef<Subdivision>(1);
   const schedulerFnRef = useRef<(() => void) | null>(null);
 
-  // Initialize AudioContext lazily
+  // Initialize AudioContext eagerly on first user interaction
   const getAudioContext = useCallback((): AudioContext => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext ||
@@ -51,6 +51,17 @@ export const useMetronome = (): UseMetronomeReturn => {
     }
     return audioContextRef.current;
   }, [volume]);
+
+  // Pre-warm AudioContext on first click anywhere (avoids cold start on play)
+  useEffect(() => {
+    const warmUp = () => {
+      const ctx = getAudioContext();
+      if (ctx.state === 'suspended') ctx.resume();
+      document.removeEventListener('pointerdown', warmUp);
+    };
+    document.addEventListener('pointerdown', warmUp);
+    return () => document.removeEventListener('pointerdown', warmUp);
+  }, [getAudioContext]);
 
   // Calculate seconds per beat (reads from ref for real-time updates)
   const getSecondPerBeat = useCallback((): number => {
@@ -149,15 +160,18 @@ export const useMetronome = (): UseMetronomeReturn => {
     if (isPlaying) return;
 
     const ctx = getAudioContext();
+    // Ensure AudioContext is running (may be suspended)
+    if (ctx.state === 'suspended') ctx.resume();
 
-    // Reset to beat 0 and initialize timing
+    // Reset to beat 0 and schedule first note immediately (no offset)
     currentSubBeatRef.current = 0;
-    nextNoteTimeRef.current = ctx.currentTime + 0.05; // Small offset to start cleanly
+    nextNoteTimeRef.current = ctx.currentTime;
 
     setIsPlaying(true);
     setCurrentBeat(0);
 
-    // Start the scheduler - calls via ref so it always uses the latest function
+    // Run scheduler immediately for first note, then on interval
+    schedulerFnRef.current?.();
     schedulerIdRef.current = window.setInterval(() => {
       schedulerFnRef.current?.();
     }, SCHEDULER_INTERVAL);

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { fetchSavedBpm, saveSongBpm } from '../api/songBpmApi';
 
 interface DeezerTrack {
   id: number;
@@ -112,7 +113,17 @@ export function useBPMSearch(): UseBPMSearchReturn {
       const cleanedTitle = cleanTitle(title);
       setSearchTitle(cleanedTitle);
 
-      // Step 2: Search Deezer for the track
+      // Step 2: Check Supabase for saved BPM first
+      const savedBpm = await fetchSavedBpm(videoUrl);
+      if (savedBpm) {
+        setDetectedBpm(savedBpm);
+        setSongInfo(`저장된 BPM (커뮤니티)`);
+        setSearchTitle(cleanedTitle);
+        setIsSearching(false);
+        return;
+      }
+
+      // Step 3: Search Deezer for the track
       const searchResult = await jsonpFetch<{ data: Array<{ id: number; title: string; artist: { name: string } }> }>(
         `https://api.deezer.com/search?q=${encodeURIComponent(cleanedTitle)}&limit=1`
       );
@@ -125,7 +136,7 @@ export function useBPMSearch(): UseBPMSearchReturn {
 
       const track = searchResult.data[0];
 
-      // Step 3: Get full track details (includes BPM)
+      // Step 4: Get full track details (includes BPM)
       const trackDetail = await jsonpFetch<DeezerTrack>(
         `https://api.deezer.com/track/${track.id}`
       );
@@ -133,6 +144,8 @@ export function useBPMSearch(): UseBPMSearchReturn {
       if (trackDetail.bpm && trackDetail.bpm > 0) {
         setDetectedBpm(trackDetail.bpm);
         setSongInfo(`${trackDetail.artist.name} - ${trackDetail.title}`);
+        // Save to Supabase for future lookups
+        saveSongBpm(videoUrl, cleanedTitle, trackDetail.bpm);
       } else {
         setError(`BPM 정보가 없습니다: ${track.artist.name} - ${track.title}`);
       }

@@ -1,4 +1,5 @@
 import { useBPMSearch } from '../model/useBPMSearch';
+import { saveSongBpm } from '../api/songBpmApi';
 import { useEffect, useRef, useCallback, useState } from 'react';
 
 interface BPMSearchProps {
@@ -38,8 +39,11 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
     const bpm = parseInt(manualBpm, 10);
     if (bpm >= 30 && bpm <= 300) {
       onBpmDetected(bpm);
+      if (videoUrl) {
+        saveSongBpm(videoUrl, searchTitle, bpm);
+      }
     }
-  }, [manualBpm, onBpmDetected]);
+  }, [manualBpm, onBpmDetected, videoUrl, searchTitle]);
 
   if (!videoUrl && !isSearching) return null;
 
