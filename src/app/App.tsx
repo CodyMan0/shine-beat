@@ -94,16 +94,17 @@ function App() {
     <div className="min-h-screen py-4 px-3 sm:py-6 sm:px-4">
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Header */}
-        <header className="text-center space-y-1 pb-2">
-          <h1 className="text-xl sm:text-2xl font-mono font-bold tracking-tight text-text-primary">
-            샤인비트
+        <header className="text-center space-y-2 pb-2">
+          <h1 className="text-2xl sm:text-3xl font-mono font-extrabold tracking-tight">
+            <span className="text-accent">Shine</span>
+            <span className="text-text-primary">Beat</span>
           </h1>
-          <p className="text-xs text-text-muted tracking-widest uppercase">
-            드럼 연습 메트로놈
+          <p className="text-[11px] text-text-muted tracking-[0.25em] uppercase font-mono">
+            Drum Practice Metronome
           </p>
           {visitorCount !== null && (
-            <p className="text-xs text-text-muted font-mono">
-              <span className="text-accent font-bold">{visitorCount.toLocaleString()}</span>명이 사용했습니다
+            <p className="text-[11px] text-text-muted font-mono">
+              <span className="text-accent font-bold">{visitorCount.toLocaleString()}</span> musicians practiced
             </p>
           )}
         </header>
