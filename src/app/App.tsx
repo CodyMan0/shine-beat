@@ -119,11 +119,11 @@ function App() {
         {/* BPM Search by Song Title */}
         <BPMSearch videoUrl={videoUrl} onBpmDetected={handleBpmDetected} />
 
-        {/* Metronome and Tap BPM Section */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
-          <MetronomeControl metronomeRef={handleMetronomeRef} />
-          <TapBPM onBpmDetected={handleBpmDetected} />
-        </div>
+        {/* Metronome Section */}
+        <MetronomeControl metronomeRef={handleMetronomeRef} />
+
+        {/* Tap BPM */}
+        <TapBPM onBpmDetected={handleBpmDetected} />
 
         {/* Sync Control Section */}
         <SyncControl

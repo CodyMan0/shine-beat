@@ -7,6 +7,7 @@ interface TapBPMProps {
 export function TapBPM({ onBpmDetected }: TapBPMProps) {
   const [detectedBpm, setDetectedBpm] = useState<number | null>(null);
   const [tapCount, setTapCount] = useState(0);
+  const [isTapping, setIsTapping] = useState(false);
   const tapsRef = useRef<number[]>([]);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -14,46 +15,37 @@ export function TapBPM({ onBpmDetected }: TapBPMProps) {
     tapsRef.current = [];
     setTapCount(0);
     setDetectedBpm(null);
+    setIsTapping(false);
   }, []);
 
   const handleTap = useCallback(() => {
     const now = Date.now();
     tapsRef.current.push(now);
+    setIsTapping(true);
 
-    // Keep only the last 8 taps
     if (tapsRef.current.length > 8) {
       tapsRef.current.shift();
     }
 
     setTapCount(tapsRef.current.length);
 
-    // Need at least 2 taps to calculate BPM
     if (tapsRef.current.length >= 2) {
       const intervals: number[] = [];
       for (let i = 1; i < tapsRef.current.length; i++) {
         intervals.push(tapsRef.current[i] - tapsRef.current[i - 1]);
       }
-
-      // Calculate average interval in milliseconds
       const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-
-      // Convert to BPM (60000 ms per minute)
       const bpm = Math.round(60000 / avgInterval);
-
       setDetectedBpm(bpm);
       onBpmDetected(bpm);
     }
 
-    // Clear existing reset timer
     if (resetTimerRef.current) {
       clearTimeout(resetTimerRef.current);
     }
-
-    // Set new reset timer (2 seconds of no tapping)
     resetTimerRef.current = setTimeout(resetTaps, 2000);
   }, [onBpmDetected, resetTaps]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (resetTimerRef.current) {
@@ -63,31 +55,25 @@ export function TapBPM({ onBpmDetected }: TapBPMProps) {
   }, []);
 
   return (
-    <div className="bg-surface rounded-xl border border-surface-border p-5">
-      <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-4">Tap Tempo</h2>
-
-      <div className="space-y-4">
-        <button
-          onClick={handleTap}
-          className="w-full py-8 sm:py-12 bg-surface border-2 border-surface-border text-text-primary rounded-xl hover:border-accent active:bg-accent active:text-black active:scale-95 transition-all text-2xl font-semibold"
-        >
-          Tap BPM
-        </button>
-
-        <div className="text-center space-y-2">
-          {detectedBpm !== null ? (
-            <>
-              <div className="text-2xl sm:text-3xl font-mono font-bold text-accent">{detectedBpm}</div>
-              <div className="text-xs text-text-muted">
-                감지된 BPM ({tapCount} taps)
-              </div>
-            </>
-          ) : (
-            <div className="text-xs text-text-muted">
-              박자에 맞춰 버튼을 탭하세요
-            </div>
-          )}
-        </div>
+    <div className="bg-surface rounded-xl border border-surface-border p-3 flex items-center gap-3">
+      <button
+        onClick={handleTap}
+        className="shrink-0 w-14 h-14 rounded-xl border-2 border-surface-border text-text-secondary font-mono text-xs font-bold uppercase tracking-wider hover:border-accent active:bg-accent active:text-black active:scale-90 transition-all select-none"
+      >
+        TAP
+      </button>
+      <div className="flex-1 min-w-0">
+        {detectedBpm !== null ? (
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-mono font-bold text-accent">{detectedBpm}</span>
+            <span className="text-[11px] text-text-muted">BPM</span>
+            <span className="text-[10px] text-text-muted ml-auto">{tapCount} taps</span>
+          </div>
+        ) : (
+          <span className="text-xs text-text-muted">
+            {isTapping ? '계속 탭하세요...' : '박자에 맞춰 탭'}
+          </span>
+        )}
       </div>
     </div>
   );
