@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { fetchSavedBpm, saveSongBpm, voteOnBpm } from '../api/songBpmApi';
-import { detectBpmFromAudio } from '../lib/detectBpmFromAudio';
 import type { BpmSource } from '../ui/BPMFeedback';
 
 interface DeezerTrack {
@@ -110,6 +109,8 @@ async function analyzeAudioBpm(videoUrl: string): Promise<{ bpm: number; confide
     const arrayBuffer = await response.arrayBuffer();
     if (arrayBuffer.byteLength < 1000) return null;
 
+    // Dynamic import to avoid breaking the main bundle if music-tempo fails
+    const { detectBpmFromAudio } = await import('../lib/detectBpmFromAudio');
     const result = await detectBpmFromAudio(arrayBuffer);
     return result;
   } catch {

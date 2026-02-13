@@ -12,7 +12,7 @@ export async function fetchSavedBpm(videoUrl: string): Promise<SavedBpmData | nu
       .from('song_bpm')
       .select('bpm, verified, vote_count')
       .eq('video_url', videoUrl)
-      .single();
+      .maybeSingle();
     if (!data) return null;
     return {
       bpm: data.bpm,
@@ -54,7 +54,7 @@ export async function voteOnBpm(
       .from('song_bpm')
       .select('bpm, vote_count, verified')
       .eq('video_url', videoUrl)
-      .single();
+      .maybeSingle();
 
     if (!current) return { success: false, newVoteCount: 0 };
 
