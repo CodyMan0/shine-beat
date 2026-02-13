@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
-import { fetchSavedBpm, saveSongBpm } from '../api/songBpmApi';
+import { fetchSavedBpm, saveSongBpm, voteOnBpm } from '../api/songBpmApi';
+import { detectBpmFromAudio } from '../lib/detectBpmFromAudio';
+import type { BpmSource } from '../ui/BPMFeedback';
 
 interface DeezerTrack {
   id: number;
@@ -8,13 +10,19 @@ interface DeezerTrack {
   bpm: number;
 }
 
-interface UseBPMSearchReturn {
+export interface UseBPMSearchReturn {
   detectedBpm: number | null;
   songInfo: string | null;
   searchTitle: string | null;
   isSearching: boolean;
+  isAnalyzingAudio: boolean;
   error: string | null;
+  confidence: number | null;
+  bpmSource: BpmSource | null;
+  isVerified: boolean;
+  voteCount: number;
   searchByUrl: (videoUrl: string) => Promise<void>;
+  submitVote: (videoUrl: string, isUpvote: boolean, correctedBpm?: number) => Promise<void>;
 }
 
 /**
@@ -41,7 +49,6 @@ function jsonpFetch<T>(url: string): Promise<T> {
       reject(new Error('Failed to fetch from Deezer API'));
     };
 
-    // Timeout after 10 seconds
     setTimeout(() => {
       cleanup();
       reject(new Error('Deezer API request timed out'));
@@ -68,7 +75,6 @@ async function fetchVideoTitle(videoUrl: string): Promise<string | null> {
 
 /**
  * Clean up video title for better search results
- * Remove common YouTube suffixes like (Official Video), [MV], lyrics, etc.
  */
 function cleanTitle(title: string): string {
   return title
@@ -82,9 +88,33 @@ function cleanTitle(title: string): string {
     .replace(/\(가사\)/gi, '')
     .replace(/Official\s*MV/gi, '')
     .replace(/M\/V/gi, '')
-    .replace(/\|\s*.*$/, '') // Remove everything after |
+    .replace(/\|\s*.*$/, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Attempt BPM detection via audio proxy + client-side analysis
+ */
+async function analyzeAudioBpm(videoUrl: string): Promise<{ bpm: number; confidence: number } | null> {
+  try {
+    const proxyUrl = `/api/audio-proxy?url=${encodeURIComponent(videoUrl)}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(proxyUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) return null;
+
+    const arrayBuffer = await response.arrayBuffer();
+    if (arrayBuffer.byteLength < 1000) return null;
+
+    const result = await detectBpmFromAudio(arrayBuffer);
+    return result;
+  } catch {
+    return null;
+  }
 }
 
 export function useBPMSearch(): UseBPMSearchReturn {
@@ -92,14 +122,24 @@ export function useBPMSearch(): UseBPMSearchReturn {
   const [songInfo, setSongInfo] = useState<string | null>(null);
   const [searchTitle, setSearchTitle] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isAnalyzingAudio, setIsAnalyzingAudio] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confidence, setConfidence] = useState<number | null>(null);
+  const [bpmSource, setBpmSource] = useState<BpmSource | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+  const [voteCount, setVoteCount] = useState(0);
 
   const searchByUrl = useCallback(async (videoUrl: string) => {
     setIsSearching(true);
+    setIsAnalyzingAudio(false);
     setError(null);
     setDetectedBpm(null);
     setSongInfo(null);
     setSearchTitle(null);
+    setConfidence(null);
+    setBpmSource(null);
+    setIsVerified(false);
+    setVoteCount(0);
 
     try {
       // Step 1: Get video title from YouTube
@@ -113,55 +153,103 @@ export function useBPMSearch(): UseBPMSearchReturn {
       const cleanedTitle = cleanTitle(title);
       setSearchTitle(cleanedTitle);
 
-      // Step 2: Check Supabase for saved BPM first
-      const savedBpm = await fetchSavedBpm(videoUrl);
-      if (savedBpm) {
-        setDetectedBpm(savedBpm);
-        setSongInfo(`저장된 BPM (커뮤니티)`);
-        setSearchTitle(cleanedTitle);
+      // Step 2: Check Supabase cache (verified BPM prioritized)
+      const savedData = await fetchSavedBpm(videoUrl);
+      if (savedData) {
+        setDetectedBpm(savedData.bpm);
+        setIsVerified(savedData.verified);
+        setVoteCount(savedData.vote_count);
+        setBpmSource(savedData.verified ? 'verified' : 'community');
+        setSongInfo(savedData.verified ? '검증된 BPM' : '저장된 BPM (커뮤니티)');
         setIsSearching(false);
         return;
       }
 
       // Step 3: Search Deezer for the track
-      const searchResult = await jsonpFetch<{ data: Array<{ id: number; title: string; artist: { name: string } }> }>(
-        `https://api.deezer.com/search?q=${encodeURIComponent(cleanedTitle)}&limit=1`
-      );
+      try {
+        const searchResult = await jsonpFetch<{
+          data: Array<{ id: number; title: string; artist: { name: string } }>;
+        }>(`https://api.deezer.com/search?q=${encodeURIComponent(cleanedTitle)}&limit=1`);
 
-      if (!searchResult.data || searchResult.data.length === 0) {
-        setError(`"${cleanedTitle}" 검색 결과가 없습니다.`);
+        if (searchResult.data && searchResult.data.length > 0) {
+          const track = searchResult.data[0];
+          const trackDetail = await jsonpFetch<DeezerTrack>(
+            `https://api.deezer.com/track/${track.id}`,
+          );
+
+          if (trackDetail.bpm && trackDetail.bpm > 0) {
+            setDetectedBpm(trackDetail.bpm);
+            setSongInfo(`${trackDetail.artist.name} - ${trackDetail.title}`);
+            setBpmSource('deezer');
+            setConfidence(0.95);
+            saveSongBpm(videoUrl, cleanedTitle, trackDetail.bpm);
+            setIsSearching(false);
+            return;
+          }
+        }
+      } catch {
+        // Deezer failed, continue to audio analysis
+      }
+
+      // Step 4: Audio analysis fallback
+      setIsAnalyzingAudio(true);
+      setSongInfo('오디오 분석 중...');
+
+      const audioResult = await analyzeAudioBpm(videoUrl);
+      setIsAnalyzingAudio(false);
+
+      if (audioResult) {
+        setDetectedBpm(audioResult.bpm);
+        setConfidence(audioResult.confidence);
+        setBpmSource('audio');
+        setSongInfo(`오디오 분석 (${Math.round(audioResult.confidence * 100)}% 신뢰도)`);
+        saveSongBpm(videoUrl, cleanedTitle, audioResult.bpm);
         setIsSearching(false);
         return;
       }
 
-      const track = searchResult.data[0];
-
-      // Step 4: Get full track details (includes BPM)
-      const trackDetail = await jsonpFetch<DeezerTrack>(
-        `https://api.deezer.com/track/${track.id}`
-      );
-
-      if (trackDetail.bpm && trackDetail.bpm > 0) {
-        setDetectedBpm(trackDetail.bpm);
-        setSongInfo(`${trackDetail.artist.name} - ${trackDetail.title}`);
-        // Save to Supabase for future lookups
-        saveSongBpm(videoUrl, cleanedTitle, trackDetail.bpm);
-      } else {
-        setError(`BPM 정보가 없습니다: ${track.artist.name} - ${track.title}`);
-      }
+      // Step 5: All methods failed — show manual input
+      setError(`"${cleanedTitle}" BPM을 찾을 수 없습니다. 직접 입력해 주세요.`);
     } catch (err) {
+      setIsAnalyzingAudio(false);
       setError(err instanceof Error ? err.message : 'BPM 검색 중 오류가 발생했습니다.');
     } finally {
       setIsSearching(false);
     }
   }, []);
 
+  const submitVote = useCallback(
+    async (videoUrl: string, isUpvote: boolean, correctedBpm?: number) => {
+      const result = await voteOnBpm(videoUrl, isUpvote, correctedBpm);
+      if (result.success) {
+        setVoteCount(result.newVoteCount);
+        if (result.newVoteCount >= 3) {
+          setIsVerified(true);
+          setBpmSource('verified');
+        }
+        if (correctedBpm) {
+          setDetectedBpm(correctedBpm);
+          setIsVerified(false);
+          setBpmSource('community');
+          setVoteCount(0);
+        }
+      }
+    },
+    [],
+  );
+
   return {
     detectedBpm,
     songInfo,
     searchTitle,
     isSearching,
+    isAnalyzingAudio,
     error,
+    confidence,
+    bpmSource,
+    isVerified,
+    voteCount,
     searchByUrl,
+    submitVote,
   };
 }

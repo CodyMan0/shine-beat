@@ -1,5 +1,6 @@
 import { useBPMSearch } from '../model/useBPMSearch';
 import { saveSongBpm } from '../api/songBpmApi';
+import { BPMFeedback } from './BPMFeedback';
 import { useEffect, useRef, useCallback, useState } from 'react';
 
 interface BPMSearchProps {
@@ -8,7 +9,20 @@ interface BPMSearchProps {
 }
 
 export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
-  const { detectedBpm, songInfo, isSearching, error, searchTitle, searchByUrl } = useBPMSearch();
+  const {
+    detectedBpm,
+    songInfo,
+    isSearching,
+    isAnalyzingAudio,
+    error,
+    searchTitle,
+    confidence,
+    bpmSource,
+    isVerified,
+    voteCount,
+    searchByUrl,
+    submitVote,
+  } = useBPMSearch();
   const lastSearchedUrl = useRef<string | null>(null);
   const [manualBpm, setManualBpm] = useState('');
 
@@ -21,7 +35,7 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
     }
   }, [videoUrl, searchByUrl]);
 
-  // Notify parent when BPM is detected (from Deezer)
+  // Notify parent when BPM is detected
   useEffect(() => {
     if (detectedBpm) {
       onBpmDetected(detectedBpm);
@@ -45,6 +59,18 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
     }
   }, [manualBpm, onBpmDetected, videoUrl, searchTitle]);
 
+  const handleVote = useCallback(
+    (isUpvote: boolean, correctedBpm?: number) => {
+      if (videoUrl) {
+        submitVote(videoUrl, isUpvote, correctedBpm);
+        if (correctedBpm) {
+          onBpmDetected(correctedBpm);
+        }
+      }
+    },
+    [videoUrl, submitVote, onBpmDetected],
+  );
+
   if (!videoUrl && !isSearching) return null;
 
   return (
@@ -52,18 +78,21 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
       {/* Status Row */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          {isSearching && (
+          {(isSearching || isAnalyzingAudio) && (
             <>
               <div
-                className="w-3 h-3 rounded-full bg-accent shrink-0"
+                className="w-3 h-3 rounded-full shrink-0"
                 style={{
+                  backgroundColor: isAnalyzingAudio ? '#3b82f6' : 'var(--color-accent)',
                   animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                 }}
               />
-              <div className="text-sm text-text-secondary">BPM 검색 중...</div>
+              <div className="text-sm text-text-secondary">
+                {isAnalyzingAudio ? '오디오 분석 중...' : 'BPM 검색 중...'}
+              </div>
             </>
           )}
-          {!isSearching && detectedBpm && songInfo && (
+          {!isSearching && !isAnalyzingAudio && detectedBpm && songInfo && (
             <>
               <div className="w-3 h-3 rounded-full bg-green-500 shrink-0" />
               <div className="text-sm text-text-primary truncate">
@@ -73,7 +102,7 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
               </div>
             </>
           )}
-          {!isSearching && error && (
+          {!isSearching && !isAnalyzingAudio && error && (
             <>
               <div className="w-3 h-3 rounded-full bg-text-muted shrink-0" />
               <div className="text-sm text-text-secondary truncate">{error}</div>
@@ -81,7 +110,7 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
           )}
         </div>
 
-        {!isSearching && videoUrl && (
+        {!isSearching && !isAnalyzingAudio && videoUrl && (
           <button
             onClick={() => {
               lastSearchedUrl.current = null;
@@ -94,8 +123,21 @@ export function BPMSearch({ videoUrl, onBpmDetected }: BPMSearchProps) {
         )}
       </div>
 
-      {/* Manual BPM Input (shown when Deezer fails) */}
-      {!isSearching && error && searchTitle && (
+      {/* BPM Feedback (shown when BPM is detected) */}
+      {!isSearching && !isAnalyzingAudio && detectedBpm && bpmSource && (
+        <BPMFeedback
+          bpm={detectedBpm}
+          source={bpmSource}
+          confidence={confidence ?? undefined}
+          isVerified={isVerified}
+          voteCount={voteCount}
+          onVote={handleVote}
+          videoUrl={videoUrl}
+        />
+      )}
+
+      {/* Manual BPM Input (shown when all methods fail) */}
+      {!isSearching && !isAnalyzingAudio && error && searchTitle && (
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleGoogleSearch}
